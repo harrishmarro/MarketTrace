@@ -1,8 +1,8 @@
 # MarketTrace
 
-Evidence-driven market research, starting with auditable daily-data ingestion.
+**MarketTrace is an evidence-driven stock-market research project that aims to turn market data into transparent, testable forecasts.** It starts with NSE equities and is being developed to connect validated price and announcement data, machine-learning evaluation, and risk-controlled paper trading.
 
-MarketTrace is a research prototype. This repository currently provides daily-price adapters, input validation and SQLite storage with source-byte provenance. It does not provide a validated forecasting service, trading recommendations or broker execution.
+The current repository provides the data-ingestion foundation: daily-price adapters, input validation and SQLite storage that preserves original source data and integrity hashes. Forecasting and paper-trading components are under development; reliable predictive performance and profitability have not been demonstrated.
 
 ## Run the offline checks
 
