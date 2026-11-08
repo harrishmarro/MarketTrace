@@ -33,7 +33,3 @@ See [daily-data ingestion](docs/ingestion.md) for usage and boundaries.
 No raw exchange data, issuer documents, private information or large research databases are distributed here. Use data only under its source's applicable terms. The original full research database is a separate dependency and is unnecessary for these synthetic tests.
 
 An imported row is not automatically cleared for training. Historical identity, corporate actions, exchange calendars, source availability and execution assumptions require separate validation. No reliable predictive edge or profitability has been established. The Yahoo research adapter is not a licensed real-time feed.
-
-## Attribution
-
-This project reuses work derived from [jakeschincariol/day-trader-skill](https://github.com/jakeschincariol/day-trader-skill), originally reviewed at commit `3d0f4ef6986f4984b7c6bd46f7ff4f87744c3abd`. Its inherited [MIT license](LICENSE) and copyright notice are preserved. That license does not grant redistribution rights over third-party market data.
