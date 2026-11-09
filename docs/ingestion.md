@@ -1,5 +1,9 @@
 # Daily-data ingestion
 
+For retaining additional NSE series from saved source batches, see
+[series-preserving staging](series-staging.md). The basic EQ importer below
+remains unchanged.
+
 ## Offline import
 
 The CLI accepts a locally available provider file and stores source bytes and parsed observations in a local SQLite database:
