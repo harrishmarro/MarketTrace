@@ -29,6 +29,21 @@ On Windows, activate with `.venv\Scripts\Activate.ps1`. If Python cannot find IA
 
 See [daily-data ingestion](docs/ingestion.md) for usage and boundaries. Announcement capture validation is documented in [announcement provenance](docs/announcement-provenance.md).
 
+## Synthetic forecasting demo
+
+The optional evaluation module demonstrates chronological partitions,
+training-only scaling and baseline comparisons using generated data only:
+
+```bash
+python -m pip install -r requirements-forecast.txt
+python -m daily_data.forecast_evaluation --synthetic --output local-output/forecast-demo
+```
+
+See [forecast evaluation](docs/forecast-evaluation.md) for artifacts, test
+coverage and limitations. The demo does not load real prices, establish a
+predictive edge or enable trading. NumPy is optional for the core importer;
+forecasting tests are skipped when it is not installed.
+
 ## Data and research boundaries
 
 No raw exchange data, issuer documents, private information or large research databases are distributed here. Use data only under its source's applicable terms. The original full research database is a separate dependency and is unnecessary for these synthetic tests.
