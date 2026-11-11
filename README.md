@@ -25,8 +25,9 @@ On Windows, activate with `.venv\Scripts\Activate.ps1`. If Python cannot find IA
 - Positive finite prices, integer volume, OHLC consistency, completed-date cutoffs and duplicate rejection.
 - Original payload bytes and SHA-256 digests retained in SQLite; repeated imports are idempotent and revised payloads remain separate.
 - Raw close and provider-adjusted close remain distinct.
+- Local announcement snapshots and NSE records validated for integrity, identity and conservative availability cutoffs.
 
-See [daily-data ingestion](docs/ingestion.md) for usage and boundaries.
+See [daily-data ingestion](docs/ingestion.md) for usage and boundaries. Announcement capture validation is documented in [announcement provenance](docs/announcement-provenance.md).
 
 ## Data and research boundaries
 
