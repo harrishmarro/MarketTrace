@@ -44,6 +44,20 @@ coverage and limitations. The demo does not load real prices, establish a
 predictive edge or enable trading. NumPy is optional for the core importer;
 forecasting tests are skipped when it is not installed.
 
+## Paper-order mechanics
+
+The local [paper ledger](docs/paper-ledger.md) records explicit simulated-order
+decisions and enforces cash, holdings, freshness and risk checks. It uses pretend
+balances and caller-supplied quotes, with no broker connection or automatic model
+execution.
+
+```bash
+python -m unittest discover -s paper -p 'test_*.py' -v
+```
+
+Fees, settlement and dividend accounting remain separate work; the ledger does
+not establish strategy returns or profitability.
+
 ## Data and research boundaries
 
 No raw exchange data, issuer documents, private information or large research databases are distributed here. Use data only under its source's applicable terms. The original full research database is a separate dependency and is unnecessary for these synthetic tests.
