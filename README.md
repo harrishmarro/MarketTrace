@@ -55,8 +55,21 @@ execution.
 python -m unittest discover -s paper -p 'test_*.py' -v
 ```
 
-Fees, settlement and dividend accounting remain separate work; the ledger does
-not establish strategy returns or profitability.
+Fee posting, settlement and dividend accounting remain separate work; the ledger
+does not establish strategy returns or profitability.
+
+## Historical cost scenarios
+
+The standalone [delivery-cost calculator](docs/cost-scenarios.md) estimates a
+hypothetical buy/sale pair under the April–December 2023 reference schedule:
+
+```bash
+python -m daily_data.trade_costs --buy-notional 100000 --sell-notional 100000 --day 2023-06-01
+```
+
+It reports explicit brokerage, DP and slippage assumptions, rejects unsupported
+dates and leaves paper-ledger balances untouched. It does not calculate current
+or intraday fees or establish profitability.
 
 ## Data and research boundaries
 
