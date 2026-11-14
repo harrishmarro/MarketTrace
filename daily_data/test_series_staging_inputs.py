@@ -1,5 +1,6 @@
 """Synthetic integration checks for portable, input-driven series staging."""
 import json
+import os
 import sqlite3
 import subprocess
 import sys
@@ -10,6 +11,7 @@ from pathlib import Path
 
 from daily_data.ingest import ingest
 from daily_data.nse_series import run
+from daily_data.nse_universe import run as universe_run
 
 
 MASTER = 'SYMBOL,NAME_OF_COMPANY,SERIES,DATE_OF_LISTING,ISIN_NUMBER\n'
@@ -21,6 +23,12 @@ REPORT = (b'SYMBOL,SERIES,DATE1,OPEN_PRICE,HIGH_PRICE,LOW_PRICE,CLOSE_PRICE,TTL_
 
 
 class StagingInputTests(unittest.TestCase):
+    def reporters(self):
+        return (
+            ('series', lambda db, output, main, sme: run(db, output, main, sme)),
+            ('universe', lambda db, output, main, sme: universe_run(db, main, sme, output)),
+        )
+
     def inputs(self, folder):
         folder = Path(folder)
         main, sme = folder/'main.csv', folder/'sme.csv'
@@ -61,6 +69,72 @@ class StagingInputTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 run(absent, Path(folder)/'report.json', main, sme)
             self.assertFalse(absent.exists())
+
+    def test_report_cannot_overwrite_database_or_either_master(self):
+        with tempfile.TemporaryDirectory() as folder:
+            db, main, sme = self.inputs(folder)
+            sources = (db, main, sme)
+            before = {path: path.read_bytes() for path in sources}
+            for name, reporter in self.reporters():
+                for output in sources:
+                    with self.subTest(reporter=name, output=output.name), self.assertRaisesRegex(ValueError, 'must not overwrite'):
+                        reporter(db, output, main, sme)
+                    self.assertEqual({path: path.read_bytes() for path in sources}, before)
+
+    def test_normalized_report_path_alias_cannot_overwrite_database(self):
+        with tempfile.TemporaryDirectory() as folder:
+            db, main, sme = self.inputs(folder)
+            nested = Path(folder) / 'nested'
+            nested.mkdir()
+            before = db.read_bytes()
+            for name, reporter in self.reporters():
+                with self.subTest(reporter=name), self.assertRaisesRegex(ValueError, 'must not overwrite'):
+                    reporter(db, nested / '..' / db.name, main, sme)
+                self.assertEqual(db.read_bytes(), before)
+
+    def test_hardlinked_report_cannot_overwrite_source_files(self):
+        with tempfile.TemporaryDirectory() as folder:
+            db, main, sme = self.inputs(folder)
+            sources = (db, main, sme)
+            before = {path: path.read_bytes() for path in sources}
+            output = Path(folder) / 'report.json'
+            for source in sources:
+                os.link(source, output)
+                try:
+                    for name, reporter in self.reporters():
+                        with self.subTest(reporter=name, source=source.name), self.assertRaisesRegex(ValueError, 'must not overwrite'):
+                            reporter(db, output, main, sme)
+                        self.assertEqual({path: path.read_bytes() for path in sources}, before)
+                finally:
+                    output.unlink()
+
+    def test_cli_rejects_destructive_output_before_mutating_sources(self):
+        with tempfile.TemporaryDirectory() as folder:
+            db, main, sme = self.inputs(folder)
+            sources = (db, main, sme)
+            before = {path: path.read_bytes() for path in sources}
+            for module in ('daily_data.nse_series', 'daily_data.nse_universe'):
+                result = subprocess.run(
+                    [sys.executable, '-m', module, '--db', str(db),
+                     '--main', str(main), '--sme', str(sme), '--output', str(db)],
+                    cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True)
+                self.assertEqual(result.returncode, 2, module)
+                self.assertIn('must not overwrite', result.stderr)
+                self.assertNotIn('Traceback', result.stderr)
+                self.assertEqual(result.stdout, '')
+                self.assertEqual({path: path.read_bytes() for path in sources}, before)
+
+    def test_universe_separate_report_preserves_source_bytes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            db, main, sme = self.inputs(folder)
+            sources = (db, main, sme)
+            before = {path: path.read_bytes() for path in sources}
+            output = Path(folder) / 'universe.json'
+            result = universe_run(db, main, sme, output)
+            self.assertEqual(result['inventory_rows'], 3)
+            self.assertEqual(result['training_eligible_rows'], 0)
+            self.assertEqual(json.loads(output.read_text()), result)
+            self.assertEqual({path: path.read_bytes() for path in sources}, before)
 
     def test_cli_accepts_explicit_input_and_output_locations(self):
         with tempfile.TemporaryDirectory() as folder:
