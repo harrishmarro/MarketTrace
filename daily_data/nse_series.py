@@ -14,7 +14,7 @@ from collections import Counter, defaultdict
 from datetime import date, datetime
 from pathlib import Path
 from .ingest import bar
-from .nse_universe import parse_master
+from .nse_universe import parse_master, validate_report_output
 
 
 def parse(raw, cutoff):
@@ -57,6 +57,10 @@ def parse(raw, cutoff):
 
 def run(db_path='research-data/daily.sqlite', output='research-data/nse-series-coverage.json',
         main_path='research-data/nse-equity-master.csv', sme_path='research-data/nse-sme-master.csv'):
+    # Refuse destructive report destinations before parsing inputs, connecting
+    # to SQLite or creating any staging state. Resolve symlinks/path aliases and
+    # check existing file identity as well so hard links cannot bypass the guard.
+    validate_report_output(output, db_path, main_path, sme_path)
     # Resolve required inputs before creating tables or changing staging state.
     inventory = []
     for board, path in [('main_board', main_path), ('sme', sme_path)]:
@@ -132,5 +136,8 @@ if __name__=='__main__':
     parser.add_argument('--sme', default='research-data/nse-sme-master.csv')
     parser.add_argument('--output', default='research-data/nse-series-coverage.json')
     args = parser.parse_args()
-    result = run(args.db, args.output, args.main, args.sme)
+    try:
+        result = run(args.db, args.output, args.main, args.sme)
+    except (ValueError, FileNotFoundError) as error:
+        parser.error(str(error))
     print(json.dumps({k:v for k,v in result.items() if k!='securities'},indent=2))
