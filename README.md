@@ -17,6 +17,12 @@ python -m daily_data.ingest --help
 
 On Windows, activate with `.venv\Scripts\Activate.ps1`. If Python cannot find IANA timezones, install `tzdata` in your virtual environment. The tests run offline using synthetic data and temporary databases.
 
+For the combined core suites and CLI checks, run
+`python scripts/verify_project.py --mode core`. Install
+`requirements-forecast.txt` and use `--mode full` to require the forecasting
+tests and identical synthetic replay. See [testing and reproducibility](docs/testing.md)
+for the two CI jobs, dependency boundaries and limits of replay evidence.
+
 ## Included functionality
 
 - NSE full-report, classic bhavcopy and UDiFF daily EQ parsers.
