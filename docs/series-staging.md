@@ -28,6 +28,9 @@ existing database are checked before staging tables are created.
 
 ## Preservation and validation
 
+- The report output must be separate from the input database and both masters.
+  Direct paths, normalized path aliases, symlinks and existing hard links to
+  those inputs are rejected before opening SQLite or changing staging state.
 - Original `batches` and EQ `observations` remain intact. Derived rows go into
   `nse_series_bars` with source-batch identity; outcomes go into `nse_series_jobs`.
 - A valid symbol/series/date key is preserved even if the same symbol appears in
@@ -44,7 +47,8 @@ existing database are checked before staging tables are created.
   train a model.
 
 The separate `nse_universe` module supplies the master parser and a legacy
-symbol-only overview. Use the series-staging report when series separation
+symbol-only overview. Its report destination has the same database/master
+preservation checks. Use the series-staging report when series separation
 matters; neither report establishes a historical, survivorship-free universe.
 Zero-volume observations remain visible and need downstream liquidity review.
 Corporate actions, missing-session explanations, source accuracy and historical
@@ -59,5 +63,6 @@ python -m unittest discover -s daily_data -p 'test_*.py' -v
 Tests generate synthetic report/master bytes and temporary databases. They cover
 series separation, cutoff and listing-date behavior, invalid-row quarantine,
 revision conflicts, repeat imports, source preservation, explicit CLI paths,
-missing inputs and the existing XLSX/ZIP container decoder. No market database
-or captured exchange/issuer documents are needed.
+missing inputs, destructive output destinations and the existing XLSX/ZIP
+container decoder. No market database or captured exchange/issuer documents
+are needed.

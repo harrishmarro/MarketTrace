@@ -13,6 +13,16 @@ SOURCES = {'main_board': 'https://nsearchives.nseindia.com/content/equities/EQUI
            'sme': 'https://nsearchives.nseindia.com/emerge/corporates/content/SME_EQUITY_L.csv'}
 
 
+def validate_report_output(output, *source_paths):
+    """Refuse aliases of source files before a report can overwrite them."""
+    target = Path(output)
+    for path in source_paths:
+        source = Path(path)
+        if (target.resolve() == source.resolve()
+                or (target.exists() and source.exists() and target.samefile(source))):
+            raise ValueError('Report output must not overwrite the database or master inputs')
+
+
 def parse_master(raw, board):
     reader = csv.DictReader(io.StringIO(raw.decode('utf-8-sig')))
     rows, seen = [], set()
@@ -38,6 +48,7 @@ def parse_master(raw, board):
 
 
 def run(db_path, main_path, sme_path, output):
+    validate_report_output(output, db_path, main_path, sme_path)
     inventory, provenance = [], []
     for board,path in [('main_board',main_path),('sme',sme_path)]:
         p=Path(path);raw=p.read_bytes();rows=parse_master(raw,board);inventory.extend(rows)
@@ -75,5 +86,9 @@ if __name__=='__main__':
     p.add_argument('--main',default='research-data/nse-equity-master.csv')
     p.add_argument('--sme',default='research-data/nse-sme-master.csv')
     p.add_argument('--output',default='research-data/nse-universe-coverage.json')
-    a=p.parse_args();r=run(a.db,a.main,a.sme,a.output)
+    a=p.parse_args()
+    try:
+        r=run(a.db,a.main,a.sme,a.output)
+    except (ValueError, FileNotFoundError) as error:
+        p.error(str(error))
     print(json.dumps({k:v for k,v in r.items() if k not in ('securities',)},indent=2))
